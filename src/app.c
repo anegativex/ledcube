@@ -9,6 +9,7 @@ uint8_t buf[4][4][4];
 
 void anim_up(){
   clrscr();
+  
   for(uint8_t z = 0;z<4;z++){
     for(uint8_t x = 0;x<4;x++){
       for(uint8_t y = 0;y<4;y++){
