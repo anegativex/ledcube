@@ -1,0 +1,7 @@
+#include "stm32f1xx_hal.h"
+
+void anim_test(void (*update)(uint8_t[4][4][4]));
+
+void anim_test(void (*update)(uint8_t[4][4][4])){
+  
+}
