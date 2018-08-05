@@ -1,46 +1,106 @@
-
-#include "stm32f1xx_hal.h"
-#include "spi.h"
-#include "usb_device.h"
-#include "gpio.h"
-#include "tim.h"
+#include "app.h"
 
 #define cs_set() HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET)
 #define cs_reset() HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET)
-#define cs_strob() cs_reset();skip(1000);cs_set();
-
-void start_app();
-void dyn_step();
-void transmit(uint8_t n);
-void skip(uint32_t n);
-void clrscr();
-uint16_t xy_to_word(uint8_t x,uint8_t y);
-void update();
+#define cs_strob() cs_reset();skip(100);cs_set();
 
 uint16_t data[4];
 uint8_t buf[4][4][4];
 
-void start_app(){
+uint8_t cur_anim = 0;
+const uint8_t anim_cnt = 2;
+uint8_t anim_changed = 0;
+
+uint8_t cooling = 0;
+
+void button_pressed(){
+  if(cooling = 0){
+    cur_anim++;
+    cur_anim%=anim_cnt;
+    anim_changed = 1;
+    cooling = 1;
+  }
+}
+
+uint16_t ms = 0;
+
+void tick(){
+  if(cooling = 1){
+    ms++;
+    if(ms >= 100){
+      cooling = 0;
+      ms = 0;
+    }
+  }
+}
+
+uint8_t anim_delay(uint16_t ms){
+  for(uint16_t i = 0; i < ms; i++){
+    if(anim_changed){
+      anim_changed = 0;
+      return 1;
+    }
+    HAL_Delay(1);
+  }
+  return 0;
+}
+
+void anim_up(){
+  clrscr();
   
-  HAL_TIM_Base_Start_IT(&htim4);
-  
-  buf[1][1][0] = 1;
-  buf[1][1][1] = 1;
-  buf[1][1][2] = 1;
-  buf[1][1][3] = 1;
-  update();
-  /*while(1){
-    clrscr();
-    for(uint8_t z = 0;z<4;z++){
-      for(uint8_t x = 0;x<4;x++){
-        for(uint8_t y = 0;y<4;y++){
-          buf[x][y][z] = 1;
-          update();
-          HAL_Delay(100);
-        }
+  for(uint8_t z = 0;z<4;z++){
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        buf[x][y][z] = 1;
+        update();
+        if(anim_delay(100))
+          return;
       }
     }
-  }*/
+  }
+}
+
+void anim_ll(){
+  for(uint8_t z = 0;z<4;z++){
+    clrscr();
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        buf[x][y][z] = 1;
+      }
+    }
+    update();
+    if(anim_delay(100))
+      return;
+  }
+  
+  for(uint8_t z = 0;z<4;z++){
+    clrscr();
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        buf[x][y][3 - z] = 1;
+      }
+    }
+    update();
+    if(anim_delay(100))
+      return;
+  }
+}
+
+void start_app(){
+  HAL_TIM_Base_Start_IT(&htim4);
+  if(SysTick_Config(SystemCoreClock / 1000) != 0)
+    while(1);
+  
+  while(1){
+    switch(cur_anim){
+    case 0:
+      anim_up();
+      break;
+    case 1:
+      anim_ll();
+      break;
+    }
+  }
 }
 
 uint16_t xy_to_word(uint8_t x,uint8_t y){
@@ -85,17 +145,15 @@ void dyn_step(){
   transmit(cur_n);
   cur_n++;
   cur_n %= 4;
-  HAL_GPIO_TogglePin(TEST_GPIO_Port,TEST_Pin);
 }
 
 void transmit(uint8_t n){
   uint8_t aTxBuffer;
-  uint16_t datax[4] = {0, 0, 0, 0};
   aTxBuffer = 1 << n;
   HAL_SPI_Transmit(&hspi1,&aTxBuffer, 1, 5000);
-  aTxBuffer = datax[n] & 0xFF;
+  aTxBuffer = data[n] & 0xFF;
   HAL_SPI_Transmit(&hspi1,&aTxBuffer, 1, 5000);
-  aTxBuffer = (datax[n] >> 8) & 0xFF;
+  aTxBuffer = (data[n] >> 8) & 0xFF;
   HAL_SPI_Transmit(&hspi1,&aTxBuffer, 1, 5000);
   cs_strob();
 }

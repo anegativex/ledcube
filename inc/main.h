@@ -59,8 +59,6 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define TEST_Pin GPIO_PIN_13
-#define TEST_GPIO_Port GPIOC
 #define LATCH_Pin GPIO_PIN_4
 #define LATCH_GPIO_Port GPIOA
 

@@ -36,7 +36,7 @@
 #include "stm32f1xx_it.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "app.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -182,7 +182,7 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  tick();
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -217,7 +217,7 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
-  //btn_ISR();
+  button_pressed();
   /* USER CODE END EXTI9_5_IRQn 1 */
 }
 

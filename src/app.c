@@ -7,6 +7,44 @@
 uint16_t data[4];
 uint8_t buf[4][4][4];
 
+uint8_t cur_anim = 0;
+const uint8_t anim_cnt = 2;
+uint8_t anim_changed = 0;
+
+uint8_t cooling = 0;
+
+void button_pressed(){
+  if(cooling == 0){
+    cur_anim++;
+    cur_anim%=anim_cnt;
+    anim_changed = 1;
+    cooling = 1;
+  }
+}
+
+uint16_t ms = 0;
+
+void tick(){
+  if(cooling == 1){
+    ms++;
+    if(ms >= 500){
+      cooling = 0;
+      ms = 0;
+    }
+  }
+}
+
+uint8_t anim_delay(uint16_t ms){
+  for(uint16_t i = 0; i < ms; i++){
+    if(anim_changed){
+      anim_changed = 0;
+      return 1;
+    }
+    HAL_Delay(1);
+  }
+  return 0;
+}
+
 void anim_up(){
   clrscr();
   
@@ -15,16 +53,64 @@ void anim_up(){
       for(uint8_t y = 0;y<4;y++){
         buf[x][y][z] = 1;
         update();
-        HAL_Delay(100);
+        if(anim_delay(10))
+          return;
+      }
+    }
+  }
+  
+  for(uint8_t z = 0;z<4;z++){
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        buf[x][y][z] = 0;
+        update();
+        if(anim_delay(10))
+          return;
       }
     }
   }
 }
 
+void anim_ll(){
+  for(uint8_t z = 1;z<4;z++){
+    clrscr();
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        buf[x][y][z] = 1;
+      }
+    }
+    update();
+    if(anim_delay(60))
+      return;
+  }
+  
+  for(uint8_t z = 1;z<4;z++){
+    clrscr();
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        buf[x][y][3 - z] = 1;
+      }
+    }
+    update();
+    if(anim_delay(60))
+      return;
+  }
+}
+
 void start_app(){
   HAL_TIM_Base_Start_IT(&htim4);
+  if(SysTick_Config(SystemCoreClock / 1000) != 0)
+    while(1);
+  
   while(1){
-    anim_up();
+    switch(cur_anim){
+    case 0:
+      anim_up();
+      break;
+    case 1:
+      anim_ll();
+      break;
+    }
   }
 }
 
@@ -70,7 +156,6 @@ void dyn_step(){
   transmit(cur_n);
   cur_n++;
   cur_n %= 4;
-  HAL_GPIO_TogglePin(TEST_GPIO_Port,TEST_Pin);
 }
 
 void transmit(uint8_t n){

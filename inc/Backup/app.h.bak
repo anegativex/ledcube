@@ -2,7 +2,7 @@
 #include "spi.h"
 #include "usb_device.h"
 #include "gpio.h"
-#include "tim.h"
+#include "tim.h" 
 
 void start_app();
 void dyn_step();
@@ -10,9 +10,10 @@ void transmit(uint8_t n);
 void skip(uint32_t n);
 void clrscr();
 uint16_t xy_to_word(uint8_t x,uint8_t y);
-uint8_t update();
+void update();
+void tick();
 
-void anim_test();
-void anim_layerdrop();
-
-uint8_t buf[4][4][4];
+uint8_t anim_delay(uint16_t ms);
+void button_pressed();
+void anim_up();
+void anim_ll();
