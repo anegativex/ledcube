@@ -12,6 +12,7 @@ void clrscr();
 uint16_t xy_to_word(uint8_t x,uint8_t y);
 void update();
 void tick();
+void pwm_step();
 
 uint8_t anim_delay(uint16_t ms);
 void button_pressed();

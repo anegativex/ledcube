@@ -109,6 +109,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
   MX_TIM4_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   start_app();
   /* USER CODE END 2 */

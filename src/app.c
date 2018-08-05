@@ -51,8 +51,7 @@ void anim_up(){
   for(uint8_t z = 0;z<4;z++){
     for(uint8_t x = 0;x<4;x++){
       for(uint8_t y = 0;y<4;y++){
-        buf[x][y][z] = 1;
-        update();
+        buf[x][y][z] = 9;
         if(anim_delay(10))
           return;
       }
@@ -63,7 +62,6 @@ void anim_up(){
     for(uint8_t x = 0;x<4;x++){
       for(uint8_t y = 0;y<4;y++){
         buf[x][y][z] = 0;
-        update();
         if(anim_delay(10))
           return;
       }
@@ -79,7 +77,6 @@ void anim_ll(){
         buf[x][y][z] = 1;
       }
     }
-    update();
     if(anim_delay(60))
       return;
   }
@@ -91,7 +88,6 @@ void anim_ll(){
         buf[x][y][3 - z] = 1;
       }
     }
-    update();
     if(anim_delay(60))
       return;
   }
@@ -99,6 +95,8 @@ void anim_ll(){
 
 void start_app(){
   HAL_TIM_Base_Start_IT(&htim4);
+  HAL_TIM_Base_Start_IT(&htim3);
+  
   if(SysTick_Config(SystemCoreClock / 1000) != 0)
     while(1);
   
@@ -133,26 +131,34 @@ uint16_t xy_to_word(uint8_t x,uint8_t y){
   }
 }
 
-void update(){
-  for(uint8_t z = 0;z<4;z++){
-    data[z] = 0;
-    for(uint8_t x = 0;x<4;x++){
-      for(uint8_t y = 0;y<4;y++){
-        if (buf[x][y][z])
-          data[z] |= xy_to_word(x,y);
-      }
-    }
-  }
-}
-
 void clrscr(){
   uint8_t clr[4][4][4] = {0};
   memcpy(buf, clr, 4*4*4);
 }
 
 uint8_t cur_n = 0;
+uint8_t counter = 0;
+
+void update(){
+  for(uint8_t z = 0;z<4;z++){
+    data[z] = 0;
+    for(uint8_t x = 0;x<4;x++){
+      for(uint8_t y = 0;y<4;y++){
+        if (buf[x][y][z] > counter)
+          data[z] |= xy_to_word(x,y);
+      }
+    }
+  }
+  counter++;
+  counter%=10;
+}
+
+void pwm_step(){
+  
+}
 
 void dyn_step(){
+  update();
   transmit(cur_n);
   cur_n++;
   cur_n %= 4;
